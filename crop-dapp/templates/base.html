@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Crop Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@2.51.5/dist/full.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/flowbite@1.6.5/dist/flowbite.min.js"></script>
+  <script src="https://unpkg.com/heroicons@2.0.13/dist/heroicons.min.js"></script>
+  {% block head %}{% endblock %}
+</head>
+
+
+<body class="bg-gradient-to-br from-green-50 to-blue-100 min-h-screen">
+  <nav class="bg-white shadow-lg py-4 px-8 flex justify-between items-center animate__animated animate__fadeInDown animate__faster">
+    <div class="flex items-center gap-2">
+      <svg class="w-8 h-8 text-green-600 animate__animated animate__pulse animate__infinite" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C7.03 2 2.5 6.03 2.5 11c0 4.97 4.53 9 9.5 9s9.5-4.03 9.5-9c0-4.97-4.53-9-9.5-9z"/></svg>
+      <span class="text-3xl font-extrabold text-green-700 tracking-tight animate__animated animate__fadeInLeft">Crop DApp</span>
+    </div>
+    <div class="flex gap-2">
+      {% if user %}
+        <span class="text-gray-700 mr-4 font-medium animate__animated animate__fadeInRight">Hi, {{ user.username }} ({{ user.role }})</span>
+        <a href="/logout" class="ml-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-all duration-200 animate__animated animate__fadeInRight">Logout</a>
+        {% if user.role == 'farmer' %}
+          <a href="/farmer" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-all duration-200 animate__animated animate__fadeInRight">Farmer</a>
+        {% elif user.role == 'consumer' %}
+          <a href="/consumer" class="ml-2 px-4 py-2 bg-yellow-500 text-white rounded-lg shadow hover:bg-yellow-600 transition-all duration-200 animate__animated animate__fadeInRight">Consumer</a>
+        {% elif user.role == 'admin' %}
+          <a href="/admin" class="ml-2 px-4 py-2 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 transition-all duration-200 animate__animated animate__fadeInRight">Admin</a>
+        {% endif %}
+      {% else %}
+        <a href="/" class="ml-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition-all duration-200 animate__animated animate__fadeInRight">Login</a>
+        <a href="/register" class="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-all duration-200 animate__animated animate__fadeInRight">Register</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <main class="container mx-auto py-8 animate__animated animate__fadeInUp animate__faster">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 animate__animated animate__shakeX animate__faster">
+          <ul>
+            {% for msg in messages %}
+              <li>{{ msg }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="bg-white shadow-inner py-4 text-center text-gray-500 mt-8 animate__animated animate__fadeInUp animate__faster">
+    &copy; {{ year or 2025 }} Crop DApp. All rights reserved.
+  </footer>
+</body>
+</html>

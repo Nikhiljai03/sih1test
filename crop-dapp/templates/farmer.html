@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block head %}
+<!-- load ethers first -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+
+
+<div class="max-w-2xl mx-auto animate__animated animate__fadeInUp animate__faster">
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 transition-all duration-300 hover:shadow-2xl">
+    <div class="flex items-center gap-2 mb-4">
+      <svg class="w-7 h-7 text-green-600 animate__animated animate__pulse animate__infinite" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C7.03 2 2.5 6.03 2.5 11c0 4.97 4.53 9 9.5 9s9.5-4.03 9.5-9c0-4.97-4.53-9-9.5-9z"/></svg>
+      <h2 class="text-2xl font-bold text-green-700 tracking-tight">Farmer Dashboard</h2>
+    </div>
+    <div class="mb-4 flex items-center gap-2">
+      <span class="font-mono text-sm text-gray-700">Wallet:</span>
+      <span id="walletAddr" class="font-mono text-xs px-2 py-1 rounded bg-gray-100 border border-gray-300">{{ user.wallet_address or 'Not linked' }}</span>
+      <button id="btnLink" class="ml-2 px-3 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-all duration-200 animate__animated animate__fadeIn">Connect & Link Wallet</button>
+    </div>
+    <form class="space-y-4">
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700">Crop Name</label>
+        <input id="name" class="input input-bordered w-full" placeholder="Crop name" />
+      </div>
+      <div>
+        <label for="desc" class="block text-sm font-medium text-gray-700">Description</label>
+        <textarea id="desc" class="textarea textarea-bordered w-full" placeholder="Description"></textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+          <input id="quantity" type="number" class="input input-bordered w-full" placeholder="Quantity" />
+        </div>
+        <div>
+          <label for="quality" class="block text-sm font-medium text-gray-700">Quality</label>
+          <input id="quality" class="input input-bordered w-full" placeholder="Quality" />
+        </div>
+      </div>
+      <button id="btnAdd" disabled class="btn btn-success w-full mt-4 animate__animated animate__pulse animate__infinite">Add Crop on-chain</button>
+      <p id="status" class="text-green-600 mt-2"></p>
+    </form>
+  </div>
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-200 transition-all duration-300 hover:shadow-2xl">
+    <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v4a1 1 0 001 1h3m10-5v4a1 1 0 01-1 1h-3m-4 0h4"/></svg>Your recorded products (DB)</h3>
+    <ul class="divide-y divide-gray-200">
+      {% for p in user.products %}
+        <li class="py-2 flex justify-between items-center animate__animated animate__fadeIn animate__faster">
+          <span class="font-semibold text-gray-700">{{ p.name }}</span>
+          <span class="text-xs text-gray-500">Qty: {{ p.quantity }}</span>
+          <span class="text-xs text-gray-500">tx: {{ p.tx_hash or 'N/A' }}</span>
+        </li>
+      {% else %}
+        <li class="py-2 text-gray-400">No products yet</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+<script>
+const CONTRACT_ADDRESS = "{{ contract_address }}";
+const CONTRACT_ABI = JSON.parse(`{{ abi | safe }}`);
+
+let provider, signer, contract;
+const btnLink = document.getElementById('btnLink');
+const btnAdd = document.getElementById('btnAdd');
+const walletSpan = document.getElementById('walletAddr');
+const status = document.getElementById('status');
+
+async function connectAndLink() {
+  status.innerText = '';
+  if (!window.ethereum) {
+    status.innerText = 'MetaMask not detected. Please install MetaMask.';
+    alert('Install MetaMask');
+    return;
+  }
+  try {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    signer = provider.getSigner();
+    const addr = await signer.getAddress();
+    const message = `Link wallet to user {{ user.id }} at ${Date.now()}`;
+    const signature = await signer.signMessage(message);
+    const res = await fetch('/link_wallet', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ message, signature, address: addr })
+    });
+    const j = await res.json();
+    if (res.ok) {
+      walletSpan.innerText = j.wallet_address;
+      status.innerText = 'Wallet linked successfully';
+      try {
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        btnAdd.disabled = false;
+        status.innerText += '\nContract ready.';
+      } catch (err) {
+        status.innerText += '\nContract instantiation failed: ' + err.message;
+        btnAdd.disabled = true;
+      }
+    } else {
+      status.innerText = 'Failed to link wallet: ' + (j.error || JSON.stringify(j));
+      btnAdd.disabled = true;
+    }
+  } catch (err) {
+    status.innerText = 'Wallet linking error: ' + err.message;
+    btnAdd.disabled = true;
+  }
+}
+
+async function addCropOnChain() {
+  status.innerText = '';
+  if (!signer) {
+    status.innerText = 'Wallet not connected.';
+    alert('Connect wallet first');
+    return;
+  }
+  if (!contract) {
+    status.innerText = 'Contract not ready.';
+    alert('Contract not ready. Please link wallet again.');
+    return;
+  }
+  const name = document.getElementById('name').value.trim();
+  const details = document.getElementById('desc').value.trim();
+  const quantity = parseInt(document.getElementById('quantity').value || '0');
+  const quality = document.getElementById('quality').value.trim();
+  const price = 0;
+  if (!name || quantity < 0) {
+    status.innerText = 'Enter all values.';
+    alert('Enter all values');
+    return;
+  }
+  try {
+    status.innerText = 'Sending transaction... (confirm in MetaMask)';
+    const tx = await contract.addCrop(
+      name, details, price, quantity, quality
+    );
+    status.innerText = 'Transaction sent. Waiting for confirmation...';
+    const receipt = await tx.wait();
+    status.innerText = 'Transaction mined: ' + receipt.transactionHash;
+    // Record the product in our DB (server-side) with txHash
+    const rec = await fetch('/record_product', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        name, description: details, quantity, quality, price, txHash: receipt.transactionHash
+      })
+    });
+    let jj;
+    try {
+      jj = await rec.json();
+    } catch (err) {
+      status.innerText += ' — failed to parse DB response: ' + err.message;
+      return;
+    }
+    if (rec.ok && jj.ok) {
+      status.innerText += ' — saved to DB';
+      setTimeout(()=>location.reload(), 900);
+    } else {
+      status.innerText += ' — failed to save DB: ' + (jj.error || JSON.stringify(jj));
+      alert('Failed to save product in DB: ' + (jj.error || JSON.stringify(jj)));
+    }
+  } catch (e) {
+    status.innerText = 'Transaction failed or rejected: ' + (e.message || e);
+    alert('Transaction failed or rejected: ' + (e.message || e));
+    console.error(e);
+  }
+}
+
+btnLink.addEventListener('click', connectAndLink);
+btnAdd.addEventListener('click', addCropOnChain);
+</script>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <h2>Consumer View - Available Products</h2>
+  <p>Click "Load from blockchain" (MetaMask will be used to read)</p>
+  <button id="loadBtn">Load from blockchain</button>
+  <div id="list"></div>
+</div>
+
+<script>
+const CONTRACT_ADDRESS = "{{ contract_address }}";
+const CONTRACT_ABI = {{ abi | safe }};
+
+async function loadProducts() {
+  if (!window.ethereum) return alert('Install MetaMask to view on-chain data');
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  await provider.send('eth_requestAccounts', []);
+  const readContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+  const crops = await readContract.getAllCrops();
+  const list = document.getElementById('list');
+  if (!crops.length) {
+    list.innerHTML = '<p>No products on-chain yet</p>';
+    return;
+  }
+  let html = '<ul>';
+  for (const c of crops) {
+    html += `<li><strong>${escapeHtml(c.name)}</strong> - ${escapeHtml(c.details)} - Qty: ${c.quantity} - Quality: ${escapeHtml(c.quality)} (Farmer: ${c.farmer})</li>`;
+  }
+  html += '</ul>';
+  list.innerHTML = html;
+}
+
+function escapeHtml(s){ if(!s) return ''; return s.toString().replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
+
+document.getElementById('loadBtn').addEventListener('click', loadProducts);
+</script>
+{% endblock %}

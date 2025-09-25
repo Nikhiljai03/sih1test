@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/workspaces/sih1test/crop-dapp/app.py", line 16, in <module>
+    with open('contract_abi.json', 'r') as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'contract_abi.json'
