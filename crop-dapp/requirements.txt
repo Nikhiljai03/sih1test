@@ -8,3 +8,4 @@ web3
 werkzeug
 
 waitress
+python-dotenv
