@@ -1,2 +1,7 @@
-flask
-flask_sqlalchemy
+
+Flask
+Flask-SQLAlchemy
+qrcode
+eth-account
+web3
+werkzeug
