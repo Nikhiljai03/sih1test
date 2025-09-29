@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import json
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 import qrcode
@@ -10,6 +11,7 @@ from eth_account.messages import encode_defunct
 from eth_account import Account  # for signature recovery
 from sqlalchemy.orm import joinedload
 
+load_dotenv()
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///crop_app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -360,6 +362,4 @@ def ml_grade_preview():
         return jsonify({'score': 0, 'grade': 'N/A', 'certification': 'N/A'})
 
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)
