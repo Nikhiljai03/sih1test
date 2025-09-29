@@ -1,3 +1,4 @@
+
 import os
 from dotenv import load_dotenv
 import json
@@ -19,19 +20,20 @@ app.secret_key = os.environ.get('FLASK_SECRET', 'supersecretkey')
 
 db.init_app(app)
 
-# Load contract ABI and address
-with open('contract_abi.json', 'r') as f:
+# Use absolute paths for ABI files
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+with open(os.path.join(BASE_DIR, 'contract_abi.json'), 'r') as f:
     CONTRACT_ABI = json.load(f)
 
 CONTRACT_ADDRESS = os.environ.get('CONTRACT_ADDRESS', '0x61eedc5753741826a3f29236f9675460c9a9342e')
 
-
-with open('transporter_abi.json', 'r') as f:
+with open(os.path.join(BASE_DIR, 'transporter_abi.json'), 'r') as f:
     TRANSPORTER_ABI = json.load(f)
 TRANSPORTER_CONTRACT_ADDRESS = os.environ.get('TRANSPORTER_CONTRACT_ADDRESS', '0x913c828e417c1fa7d2cd33f1ef9240011bafef1c')
 
 # Load QualityInspectionRegistry ABI and address
-with open('quality_inspection_abi.json', 'r') as f:
+with open(os.path.join(BASE_DIR, 'quality_inspection_abi.json'), 'r') as f:
     QUALITY_INSPECTION_ABI = json.load(f)
 QUALITY_INSPECTION_CONTRACT_ADDRESS = os.environ.get('QUALITY_INSPECTION_CONTRACT_ADDRESS', '0x39e4b7d3729642c3289007dfbdc5adb8bd73c817')
 
