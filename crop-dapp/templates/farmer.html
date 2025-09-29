@@ -5,22 +5,30 @@
 {% endblock %}
 {% block content %}
 
-
 <div class="max-w-2xl mx-auto animate__animated animate__fadeInUp animate__faster">
+  <!-- Language Selector -->
+  <div class="flex justify-end mb-2">
+    <label for="langSelect" class="mr-2 font-semibold">🌐</label>
+    <select id="langSelect" class="border rounded px-2 py-1">
+      <option value="en">English</option>
+      <option value="hi">हिंदी</option>
+      <option value="te">తెలుగు</option>
+    </select>
+  </div>
   <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 mb-8 border border-gray-200 transition-all duration-300 hover:shadow-2xl">
     <div class="flex items-center gap-2 mb-4">
       <svg class="w-7 h-7 text-green-600 animate__animated animate__pulse animate__infinite" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C7.03 2 2.5 6.03 2.5 11c0 4.97 4.53 9 9.5 9s9.5-4.03 9.5-9c0-4.97-4.53-9-9.5-9z"/></svg>
-      <h2 class="text-2xl font-bold text-green-700 tracking-tight">Farmer Dashboard</h2>
+  <h2 id="titleDash" class="text-2xl font-bold text-green-700 tracking-tight">Farmer Dashboard</h2>
     </div>
     <div class="mb-4 flex items-center gap-2">
-      <span class="font-mono text-sm text-gray-700">Wallet:</span>
+  <span id="labelWallet" class="font-mono text-sm text-gray-700">Wallet:</span>
       <span id="walletAddr" class="font-mono text-xs px-2 py-1 rounded bg-gray-100 border border-gray-300">{{ user.wallet_address or 'Not linked' }}</span>
-      <button id="btnLink" class="ml-2 px-3 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-all duration-200 animate__animated animate__fadeIn">Connect & Link Wallet</button>
+  <button id="btnLink" class="ml-2 px-3 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-all duration-200 animate__animated animate__fadeIn">Connect & Link Wallet</button>
     </div>
     <form class="space-y-4">
       <div class="mb-2">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Select Crop</label>
-        <button type="button" onclick="toggleCropGrid()" class="px-3 py-1 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition mb-2">Select Crop</button>
+        <label id="labelSelectCrop" class="block text-sm font-medium text-gray-700 mb-1">Select Crop</label>
+        <button id="btnSelectCrop" type="button" onclick="toggleCropGrid()" class="px-3 py-1 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition mb-2">Select Crop</button>
         <div id="cropGrid" class="grid grid-cols-4 gap-3 mb-2" style="display:none;">
           <img src="/static/crops/potato.png" alt="Potato" class="cursor-pointer rounded-lg border-2 border-transparent hover:border-green-400" onclick="selectCrop('Potato')">
           <img src="/static/crops/tomato.png" alt="Tomato" class="cursor-pointer rounded-lg border-2 border-transparent hover:border-green-400" onclick="selectCrop('Tomato')">
@@ -30,20 +38,20 @@
         </div>
       </div>
       <div>
-        <label for="name" class="block text-sm font-medium text-gray-700">Crop Name</label>
-        <input id="name" class="input input-bordered w-full" placeholder="Crop name" />
+  <label id="labelCropName" for="name" class="block text-sm font-medium text-gray-700">Crop Name</label>
+  <input id="name" class="input input-bordered w-full" placeholder="Crop name" />
       </div>
       <div>
-        <label for="desc" class="block text-sm font-medium text-gray-700">Description</label>
-        <textarea id="desc" class="textarea textarea-bordered w-full" placeholder="Description"></textarea>
+  <label id="labelDesc" for="desc" class="block text-sm font-medium text-gray-700">Description</label>
+  <textarea id="desc" class="textarea textarea-bordered w-full" placeholder="Description"></textarea>
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+          <label id="labelQty" for="quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
           <input id="quantity" type="number" class="input input-bordered w-full" placeholder="Quantity" />
         </div>
         <div>
-          <label for="quality" class="block text-sm font-medium text-gray-700">Quality</label>
+          <label id="labelQuality" for="quality" class="block text-sm font-medium text-gray-700">Quality</label>
           <select id="quality" class="input input-bordered w-full">
             <option value="premium">Premium</option>
             <option value="high">High</option>
@@ -54,7 +62,7 @@
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label for="fertilizer" class="block text-sm font-medium text-gray-700">Type of Fertilizers Used</label>
+          <label id="labelFert" for="fertilizer" class="block text-sm font-medium text-gray-700">Type of Fertilizers Used</label>
           <select id="fertilizer" class="input input-bordered w-full">
             <option value="urea">Urea</option>
             <option value="compost">Compost</option>
@@ -65,7 +73,7 @@
           </select>
         </div>
         <div>
-          <label for="organic" class="block text-sm font-medium text-gray-700">Organic/Inorganic</label>
+          <label id="labelOrg" for="organic" class="block text-sm font-medium text-gray-700">Organic/Inorganic</label>
           <select id="organic" class="input input-bordered w-full">
             <option value="organic">Organic</option>
             <option value="inorganic">Inorganic</option>
@@ -74,7 +82,7 @@
       </div>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label for="soil" class="block text-sm font-medium text-gray-700">Soil Type</label>
+          <label id="labelSoil" for="soil" class="block text-sm font-medium text-gray-700">Soil Type</label>
           <select id="soil" class="input input-bordered w-full">
             <option value="loamy">Loamy</option>
             <option value="sandy">Sandy</option>
@@ -84,7 +92,7 @@
           </select>
         </div>
         <div>
-          <label for="irrigation" class="block text-sm font-medium text-gray-700">Irrigation Method</label>
+          <label id="labelIrr" for="irrigation" class="block text-sm font-medium text-gray-700">Irrigation Method</label>
           <select id="irrigation" class="input input-bordered w-full">
             <option value="drip">Drip</option>
             <option value="sprinkler">Sprinkler</option>
@@ -93,12 +101,12 @@
           </select>
         </div>
       </div>
-      <button id="btnAdd" disabled class="btn btn-success w-full mt-4 animate__animated animate__pulse animate__infinite">Add Crop on-chain</button>
+  <button id="btnAdd" disabled class="btn btn-success w-full mt-4 animate__animated animate__pulse animate__infinite">Add Crop on-chain</button>
       <p id="status" class="text-green-600 mt-2"></p>
     </form>
   </div>
   <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-200 transition-all duration-300 hover:shadow-2xl">
-    <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v4a1 1 0 001 1h3m10-5v4a1 1 0 01-1 1h-3m-4 0h4"/></svg>Your recorded products (DB)</h3>
+  <h3 id="labelProducts" class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v4a1 1 0 001 1h3m10-5v4a1 1 0 01-1 1h-3m-4 0h4"/></svg>Your recorded products (DB)</h3>
     <ul class="divide-y divide-gray-200">
       {% for p in user.products %}
         <li class="py-2 flex justify-between items-center animate__animated animate__fadeIn animate__faster">
@@ -114,6 +122,88 @@
 </div>
 
 <script>
+// Multi-lingual support
+const translations = {
+  en: {
+    titleDash: "Farmer Dashboard",
+    labelWallet: "Wallet:",
+    btnLink: "Connect & Link Wallet",
+    labelSelectCrop: "Select Crop",
+    btnSelectCrop: "Select Crop",
+    labelCropName: "Crop Name",
+    labelDesc: "Description",
+    labelQty: "Quantity",
+    labelQuality: "Quality",
+    labelFert: "Type of Fertilizers Used",
+    labelOrg: "Organic/Inorganic",
+    labelSoil: "Soil Type",
+    labelIrr: "Irrigation Method",
+    btnAdd: "Add Crop on-chain",
+    labelProducts: "Your recorded products (DB)"
+  },
+  hi: {
+    titleDash: "किसान डैशबोर्ड",
+    labelWallet: "वॉलेट:",
+    btnLink: "वॉलेट कनेक्ट करें",
+    labelSelectCrop: "फसल चुनें",
+    btnSelectCrop: "फसल चुनें",
+    labelCropName: "फसल का नाम",
+    labelDesc: "विवरण",
+    labelQty: "मात्रा",
+    labelQuality: "गुणवत्ता",
+    labelFert: "उर्वरकों का प्रकार",
+    labelOrg: "जैविक/अजैविक",
+    labelSoil: "मिट्टी का प्रकार",
+    labelIrr: "सिंचाई विधि",
+    btnAdd: "फसल जोड़ें",
+    labelProducts: "आपकी दर्ज फसलें (DB)"
+  },
+  te: {
+    titleDash: "రైతు డాష్‌బోర్డ్",
+    labelWallet: "వాలెట్:",
+    btnLink: "వాలెట్ కనెక్ట్ చేయండి",
+    labelSelectCrop: "పంటను ఎంచుకోండి",
+    btnSelectCrop: "పంటను ఎంచుకోండి",
+    labelCropName: "పంట పేరు",
+    labelDesc: "వివరణ",
+    labelQty: "పరిమాణం",
+    labelQuality: "నాణ్యత",
+    labelFert: "ఎరువుల రకం",
+    labelOrg: "సేంద్రీయ/అసేంద్రీయ",
+    labelSoil: "నేల రకం",
+    labelIrr: "పొడిగింపు విధానం",
+    btnAdd: "పంటను జోడించండి",
+    labelProducts: "మీ నమోదు చేసిన పంటలు (DB)"
+  }
+};
+
+function setLang(lang) {
+  const t = translations[lang];
+  document.getElementById('titleDash').innerText = t.titleDash;
+  document.getElementById('labelWallet').innerText = t.labelWallet;
+  document.getElementById('btnLink').innerText = t.btnLink;
+  document.getElementById('labelSelectCrop').innerText = t.labelSelectCrop;
+  document.getElementById('btnSelectCrop').innerText = t.btnSelectCrop;
+  document.getElementById('labelCropName').innerText = t.labelCropName;
+  document.getElementById('name').placeholder = t.labelCropName;
+  document.getElementById('labelDesc').innerText = t.labelDesc;
+  document.getElementById('desc').placeholder = t.labelDesc;
+  document.getElementById('labelQty').innerText = t.labelQty;
+  document.getElementById('quantity').placeholder = t.labelQty;
+  document.getElementById('labelQuality').innerText = t.labelQuality;
+  document.getElementById('labelFert').innerText = t.labelFert;
+  document.getElementById('labelOrg').innerText = t.labelOrg;
+  document.getElementById('labelSoil').innerText = t.labelSoil;
+  document.getElementById('labelIrr').innerText = t.labelIrr;
+  document.getElementById('btnAdd').innerText = t.btnAdd;
+  document.getElementById('labelProducts').innerText = t.labelProducts;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('langSelect').addEventListener('change', function(e) {
+    setLang(e.target.value);
+  });
+});
 function toggleCropGrid() {
   const grid = document.getElementById('cropGrid');
   grid.style.display = (grid.style.display === 'none') ? 'grid' : 'none';
