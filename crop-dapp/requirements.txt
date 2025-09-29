@@ -6,3 +6,5 @@ qrcode
 eth-account
 web3
 werkzeug
+
+waitress

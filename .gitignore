@@ -1,0 +1,9 @@
+.env
+env
+.venv/
+nohup.out
+__pycache__/
+*.pyc
+crop-dapp/__pycache__/
+crop-dapp/instance/
+crop-dapp/instance/crop_app.db
