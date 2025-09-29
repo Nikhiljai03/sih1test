@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto animate__animated animate__fadeInUp animate__faster">
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 mb-8 border border-gray-200">
+    <div class="flex items-center gap-2 mb-4">
+      <svg class="w-7 h-7 text-purple-600 animate__animated animate__pulse animate__infinite" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C7.03 2 2.5 6.03 2.5 11c0 4.97 4.53 9 9.5 9s9.5-4.03 9.5-9c0-4.97-4.53-9-9.5-9z"/></svg>
+      <h2 class="text-2xl font-bold text-purple-700 tracking-tight">Quality Inspector Dashboard</h2>
+    </div>
+  <form class="space-y-4" id="inspectForm" autocomplete="off">
+      <div>
+        <label for="productId" class="block text-sm font-medium text-gray-700">Select Product</label>
+        <select id="productId" class="input input-bordered w-full" onchange="showMLResults()">
+          <option value="">Select a product</option>
+          {% for p in products %}
+            <option value="{{ p.id }}">ID: {{ p.id }} | {{ p.name }} | Farmer: {{ p.farmer.username }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="mlResults" style="display:none;">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">ML Model Score</label>
+          <span id="mlScore" class="block font-bold text-purple-700"></span>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Grade</label>
+          <span id="grade" class="block font-bold text-purple-700"></span>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Certificate</label>
+          <span id="certificate" class="block font-bold text-purple-700"></span>
+        </div>
+      </div>
+      <div>
+        <label for="remarks" class="block text-sm font-medium text-gray-700">Remarks</label>
+        <textarea id="remarks" name="remarks" class="textarea textarea-bordered w-full" placeholder="Inspector remarks"></textarea>
+      </div>
+  <button id="btnInspect" class="btn btn-purple w-full mt-4 animate__animated animate__pulse animate__infinite" type="submit">Submit Inspection (On-chain)</button>
+      <p id="status" class="text-purple-600 mt-2"></p>
+    </form>
+    <script>
+    const CONTRACT_ADDRESS = "{{ quality_inspection_contract_address }}";
+    const CONTRACT_ABI = JSON.parse(`{{ quality_inspection_abi | safe }}`);
+    let provider, signer, contract;
+    async function connectEthers() {
+      if (!window.ethereum) {
+        alert('MetaMask not detected. Please install MetaMask.');
+        return;
+      }
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      signer = provider.getSigner();
+      contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    }
+
+
+    function showMLResults() {
+      const pid = document.getElementById('productId').value;
+      const mlResults = document.getElementById('mlResults');
+      if (pid) {
+        fetch(`/ml_grade_preview?product_id=${pid}`)
+          .then(res => res.json())
+          .then(data => {
+            mlResults.style.display = 'block';
+            if (data.grade === 'N/A' || data.score === 0) {
+              document.getElementById('mlScore').textContent = 'N/A';
+              document.getElementById('grade').textContent = 'N/A';
+              document.getElementById('certificate').textContent = 'N/A';
+              mlResults.insertAdjacentHTML('beforeend', '<div class="text-red-600 text-sm mt-2">ML grading unavailable: missing or invalid product data.</div>');
+            } else {
+              document.getElementById('mlScore').textContent = data.score;
+              document.getElementById('grade').textContent = data.grade;
+              document.getElementById('certificate').textContent = data.certification;
+            }
+          })
+          .catch(() => {
+            mlResults.style.display = 'block';
+            document.getElementById('mlScore').textContent = 'N/A';
+            document.getElementById('grade').textContent = 'N/A';
+            document.getElementById('certificate').textContent = 'N/A';
+            mlResults.insertAdjacentHTML('beforeend', '<div class="text-red-600 text-sm mt-2">Error fetching ML grading. Please check product data.</div>');
+          });
+      } else {
+        mlResults.style.display = 'none';
+      }
+    }
+
+    async function fetchInspections() {
+      const pid = document.getElementById('productId').value;
+      if (!pid || !contract) return;
+      try {
+        const records = await contract.getInspections(pid);
+        const list = document.getElementById('inspectionList');
+        list.innerHTML = '';
+        if (records.length === 0) {
+          list.innerHTML = '<li class="py-2 text-gray-400">No inspections yet</li>';
+          return;
+        }
+        for (const r of records) {
+          const li = document.createElement('li');
+          li.className = 'py-2 flex flex-col animate__animated animate__fadeIn animate__faster';
+          li.innerHTML = `<span class="font-semibold text-gray-700">Product ID: ${r.productId}</span>
+            <span class="text-xs text-gray-500">Grade: ${r.grade} | Score: ${r.score/100}</span>
+            <span class="text-xs text-gray-500">Certificate: ${r.certificate}</span>
+            <span class="text-xs text-gray-500">Inspector: ${r.inspector}</span>
+            <span class="text-xs text-gray-500">Comments: ${r.comments}</span>
+            <span class="text-xs text-gray-500">Time: ${new Date(r.timestamp * 1000).toLocaleString()}</span>`;
+          list.appendChild(li);
+        }
+      } catch (e) {
+        document.getElementById('inspectionList').innerHTML = '<li class="py-2 text-red-400">Error fetching records</li>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await connectEthers();
+      document.getElementById('productId').addEventListener('change', fetchInspections);
+      // Optionally, fetch for first product
+      // fetchInspections();
+    });
+
+    document.getElementById('inspectForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      await connectEthers();
+      const pid = document.getElementById('productId').value;
+      const remarks = document.getElementById('remarks').value;
+      const status = document.getElementById('status');
+      status.innerText = '';
+      if (!pid) {
+        status.innerText = 'Select a product.';
+        return;
+      }
+      // Get ML results
+      const ml = await fetch(`/ml_grade_preview?product_id=${pid}`).then(res => res.json());
+      try {
+        status.innerText = 'Submitting on-chain...';
+        // Score is float, contract expects int (e.g., 0.87 -> 87)
+        const tx = await contract.recordInspection(
+          pid,
+          Math.round(ml.score * 100),
+          ml.grade,
+          ml.certification,
+          remarks
+        );
+        status.innerText = 'Transaction sent. Waiting for confirmation...';
+        await tx.wait();
+        status.innerText = 'Inspection recorded on-chain.';
+        fetchInspections();
+      } catch (err) {
+        status.innerText = 'Error: ' + (err.message || err);
+      }
+    });
+    </script>
+  </div>
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-200">
+    <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v4a1 1 0 001 1h3m10-5v4a1 1 0 01-1 1h-3m-4 0h4"/></svg>Inspection Records (On-chain)</h3>
+    <ul id="inspectionList" class="divide-y divide-gray-200"></ul>
+  </div>
+</div>
+<script>
+document.getElementById('inspectForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const productId = document.getElementById('productId').value;
+  const mlScore = document.getElementById('mlScore').value;
+  const grade = document.getElementById('grade').value.trim();
+  const certificate = document.getElementById('certificate').value.trim();
+  const comments = document.getElementById('comments').value.trim();
+  const status = document.getElementById('status');
+  status.innerText = '';
+  if (!productId || !mlScore || !grade || !certificate) {
+    status.innerText = 'Enter all required values.';
+    alert('Enter all required values');
+    return;
+  }
+  try {
+    const res = await fetch('/record_inspection', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ productId, mlScore, grade, certificate, comments })
+    });
+    const j = await res.json();
+    if (res.ok && j.ok) {
+      status.innerText = 'Inspection recorded.';
+      setTimeout(()=>location.reload(), 900);
+    } else {
+      status.innerText = 'Failed to record inspection: ' + (j.error || JSON.stringify(j));
+      alert('Failed to record inspection: ' + (j.error || JSON.stringify(j)));
+    }
+  } catch (err) {
+    status.innerText = 'Error: ' + err.message;
+    alert('Error: ' + err.message);
+  }
+});
+</script>
+{% endblock %}

@@ -8,5 +8,40 @@
       <li>{{ u.username }} ({{ u.role }}) - <a href="{{ url_for('delete_user', user_id=u.id) }}">Delete</a></li>
     {% endfor %}
   </ul>
+
+  <h3 class="mt-6">Assign Transporter to Products</h3>
+  <table class="table-auto w-full mt-2">
+    <thead>
+      <tr>
+        <th class="px-2 py-1">Product</th>
+        <th class="px-2 py-1">Current Transporter</th>
+        <th class="px-2 py-1">Assign Transporter</th>
+        <th class="px-2 py-1">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in products %}
+      <tr>
+        <td class="px-2 py-1">{{ p.name }} (ID: {{ p.id }})</td>
+        <td class="px-2 py-1">{{ p.assigned_transporter.username if p.assigned_transporter else 'None' }}</td>
+        <td class="px-2 py-1">
+          <form method="post" action="/assign_transporter" style="display:inline;">
+            <input type="hidden" name="product_id" value="{{ p.id }}" />
+            <select name="transporter_id" class="input input-bordered">
+              <option value="">Select</option>
+              {% for t in transporters %}
+                <option value="{{ t.id }}" {% if p.assigned_transporter and p.assigned_transporter.id == t.id %}selected{% endif %}>{{ t.username }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm btn-blue ml-2">Assign</button>
+          </form>
+        </td>
+        <td class="px-2 py-1">
+          <!-- Optionally, add unassign button or other actions -->
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 </div>
 {% endblock %}

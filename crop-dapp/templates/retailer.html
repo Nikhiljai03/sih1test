@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto animate__animated animate__fadeInUp animate__faster">
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 mb-8 border border-gray-200">
+    <div class="flex items-center gap-2 mb-4">
+      <svg class="w-7 h-7 text-blue-600 animate__animated animate__pulse animate__infinite" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C7.03 2 2.5 6.03 2.5 11c0 4.97 4.53 9 9.5 9s9.5-4.03 9.5-9c0-4.97-4.53-9-9.5-9z"/></svg>
+      <h2 class="text-2xl font-bold text-blue-700 tracking-tight">Retailer Dashboard</h2>
+    </div>
+    <form class="space-y-4" id="retailForm">
+      <div>
+        <label for="productId" class="block text-sm font-medium text-gray-700">Select Product</label>
+        <select id="productId" class="input input-bordered w-full">
+          <option value="">Select a product</option>
+          {% for p in products %}
+            <option value="{{ p.id }}">ID: {{ p.id }} | {{ p.name }} | Farmer: {{ p.farmer.username }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="salePrice" class="block text-sm font-medium text-gray-700">Final Sale Price</label>
+        <input id="salePrice" type="number" class="input input-bordered w-full" placeholder="Sale Price" />
+      </div>
+      <div>
+        <label for="retailDetails" class="block text-sm font-medium text-gray-700">Retail Details</label>
+        <textarea id="retailDetails" class="textarea textarea-bordered w-full" placeholder="Retailer notes, location, etc."></textarea>
+      </div>
+      <button id="btnLogSale" class="btn btn-blue w-full mt-4 animate__animated animate__pulse animate__infinite" type="submit">Log Sale & Generate QR</button>
+      <p id="status" class="text-blue-600 mt-2"></p>
+    </form>
+    <div id="qrSection" style="display:none;" class="mt-6">
+      <h3 class="text-lg font-bold text-blue-700 mb-2">Product QR Code</h3>
+      <div id="qrCode"></div>
+      <p class="text-xs text-gray-500 mt-2">Share this QR with consumers for product verification.</p>
+    </div>
+  </div>
+
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-200 mt-8">
+    <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2">All Products & Sale Details</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% for p in products %}
+      <div class="border rounded-xl p-4 shadow bg-gray-50">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="font-bold text-lg text-green-700">{{ p.name }}</span>
+          <span class="text-xs text-gray-500">ID: {{ p.id }}</span>
+        </div>
+        <div class="mb-2 text-sm text-gray-700">{{ p.description }}</div>
+        <div class="mb-2 text-xs text-gray-500">Farmer: {{ p.farmer.username }}</div>
+        <div class="mb-2 text-xs text-gray-500">Quantity: {{ p.quantity }} | Quality: {{ p.quality }}</div>
+        <div class="mb-2 text-xs text-gray-500">Fertilizer: {{ p.fertilizer }} | Organic: {{ p.organic }}</div>
+        <div class="mb-2 text-xs text-gray-500">Soil: {{ p.soil }} | Irrigation: {{ p.irrigation }}</div>
+        {% if p.inspections|length > 0 %}
+        <div class="mb-2 text-xs text-purple-700">ML Grade: {{ p.inspections[-1].grade }} | Score: {{ p.inspections[-1].score }} | Certificate: {{ p.inspections[-1].certificate }}</div>
+        {% endif %}
+        {% if p.retail_sales|length > 0 %}
+        <div class="mt-2">
+          <span class="font-bold text-blue-700">Retailer Sale Info:</span>
+          <div class="text-xs text-gray-500">Sale Price: {{ p.retail_sales[-1].sale_price }}</div>
+          <div class="text-xs text-gray-500">Retailer: {{ p.retail_sales[-1].retailer.username }}</div>
+          <div class="text-xs text-gray-500">Details: {{ p.retail_sales[-1].retail_details }}</div>
+          <div class="mt-2">
+            <span class="font-bold text-blue-700">Product QR Code:</span>
+            <img src="data:image/png;base64,{{ p.retail_sales[-1].qr_img }}" width="120" height="120" />
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+  document.getElementById('retailForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const pid = document.getElementById('productId').value;
+    const price = document.getElementById('salePrice').value;
+    const details = document.getElementById('retailDetails').value;
+    fetch('/log_sale', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ product_id: pid, sale_price: price, retail_details: details })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.qr_data) {
+        document.getElementById('qrSection').style.display = 'block';
+        document.getElementById('status').textContent = 'Sale logged and QR generated.';
+        document.getElementById('qrCode').innerHTML = '';
+        new QRCode(document.getElementById('qrCode'), {
+          text: data.qr_data,
+          width: 180,
+          height: 180
+        });
+      } else {
+        document.getElementById('status').textContent = 'Error logging sale.';
+      }
+    });
+  });
+</script>
+{% endblock %}

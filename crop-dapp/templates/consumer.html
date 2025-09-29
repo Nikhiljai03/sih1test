@@ -3,38 +3,39 @@
 <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 {% endblock %}
 {% block content %}
-<div class="card">
-  <h2>Consumer View - Available Products</h2>
-  <p>Click "Load from blockchain" (MetaMask will be used to read)</p>
-  <button id="loadBtn">Load from blockchain</button>
-  <div id="list"></div>
+<div class="max-w-4xl mx-auto animate__animated animate__fadeInUp animate__faster">
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-200 mt-8">
+    <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2">Product Catalogue</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {% for p in products %}
+      <div class="border rounded-xl p-4 shadow bg-gray-50">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="font-bold text-lg text-green-700">{{ p.name }}</span>
+          <span class="text-xs text-gray-500">ID: {{ p.id }}</span>
+        </div>
+        <div class="mb-2 text-sm text-gray-700">{{ p.description }}</div>
+        <div class="mb-2 text-xs text-gray-500">Farmer: {{ p.farmer.username }}</div>
+        <div class="mb-2 text-xs text-gray-500">Quantity: {{ p.quantity }} | Quality: {{ p.quality }}</div>
+        <div class="mb-2 text-xs text-gray-500">Fertilizer: {{ p.fertilizer }} | Organic: {{ p.organic }}</div>
+        <div class="mb-2 text-xs text-gray-500">Soil: {{ p.soil }} | Irrigation: {{ p.irrigation }}</div>
+        {% if p.inspections|length > 0 %}
+        <div class="mb-2 text-xs text-purple-700">ML Grade: {{ p.inspections[-1].grade }} | Score: {{ p.inspections[-1].score }} | Certificate: {{ p.inspections[-1].certificate }}</div>
+        {% endif %}
+        {% if p.retail_sales|length > 0 %}
+        <div class="mt-2">
+          <span class="font-bold text-blue-700">Retailer Sale Info:</span>
+          <div class="text-xs text-gray-500">Sale Price: {{ p.retail_sales[-1].sale_price }}</div>
+          <div class="text-xs text-gray-500">Retailer: {{ p.retail_sales[-1].retailer.username }}</div>
+          <div class="text-xs text-gray-500">Details: {{ p.retail_sales[-1].retail_details }}</div>
+          <div class="mt-2">
+            <span class="font-bold text-blue-700">Product QR Code:</span>
+            <img src="data:image/png;base64,{{ p.retail_sales[-1].qr_img }}" width="120" height="120" />
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 </div>
-
-<script>
-const CONTRACT_ADDRESS = "{{ contract_address }}";
-const CONTRACT_ABI = {{ abi | safe }};
-
-async function loadProducts() {
-  if (!window.ethereum) return alert('Install MetaMask to view on-chain data');
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  await provider.send('eth_requestAccounts', []);
-  const readContract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-  const crops = await readContract.getAllCrops();
-  const list = document.getElementById('list');
-  if (!crops.length) {
-    list.innerHTML = '<p>No products on-chain yet</p>';
-    return;
-  }
-  let html = '<ul>';
-  for (const c of crops) {
-    html += `<li><strong>${escapeHtml(c.name)}</strong> - ${escapeHtml(c.details)} - Qty: ${c.quantity} - Quality: ${escapeHtml(c.quality)} (Farmer: ${c.farmer})</li>`;
-  }
-  html += '</ul>';
-  list.innerHTML = html;
-}
-
-function escapeHtml(s){ if(!s) return ''; return s.toString().replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-
-document.getElementById('loadBtn').addEventListener('click', loadProducts);
-</script>
 {% endblock %}

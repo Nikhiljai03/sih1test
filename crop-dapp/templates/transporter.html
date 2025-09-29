@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto animate__animated animate__fadeInUp animate__faster">
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 mb-8 border border-gray-200">
+    <div class="flex items-center gap-2 mb-4">
+      <svg class="w-7 h-7 text-yellow-600 animate__animated animate__pulse animate__infinite" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C7.03 2 2.5 6.03 2.5 11c0 4.97 4.53 9 9.5 9s9.5-4.03 9.5-9c0-4.97-4.53-9-9.5-9z"/></svg>
+      <h2 class="text-2xl font-bold text-yellow-700 tracking-tight">Transporter Dashboard</h2>
+    </div>
+    <div class="mb-4 flex items-center gap-2">
+      <span class="font-mono text-sm text-gray-700">Wallet:</span>
+      <span id="walletAddr" class="font-mono text-xs px-2 py-1 rounded bg-gray-100 border border-gray-300">Not linked</span>
+      <button id="btnLink" class="ml-2 px-3 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-all duration-200 animate__animated animate__fadeIn">Connect & Link Wallet</button>
+    </div>
+    <form class="space-y-4">
+      <div>
+        <label for="cropId" class="block text-sm font-medium text-gray-700">Select Product (Crop)</label>
+        <select id="cropId" class="input input-bordered w-full">
+          <option value="">Select a product</option>
+          {% for p in products %}
+            <option value="{{ p.id }}">ID: {{ p.id }} | {{ p.name }} | Location: {{ p.description[:30] }}...</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="location" class="block text-sm font-medium text-gray-700">Current Location</label>
+        <input id="location" class="input input-bordered w-full" placeholder="Location" />
+      </div>
+      <div>
+        <label for="custody" class="block text-sm font-medium text-gray-700">Custody Details</label>
+        <input id="custody" class="input input-bordered w-full" placeholder="Custody details" />
+      </div>
+      <button id="btnUpdate" disabled class="btn btn-warning w-full mt-4 animate__animated animate__pulse animate__infinite">Update Transport on-chain</button>
+      <p id="status" class="text-yellow-600 mt-2"></p>
+    </form>
+  </div>
+  <div class="bg-white bg-opacity-80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-gray-200">
+    <h3 class="text-xl font-semibold text-blue-700 mb-4 flex items-center gap-2"><svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v4a1 1 0 001 1h3m10-5v4a1 1 0 01-1 1h-3m-4 0h4"/></svg>Transport Records (on-chain)</h3>
+    <ul id="recordList" class="divide-y divide-gray-200"></ul>
+  </div>
+</div>
+<script>
+const CONTRACT_ADDRESS = "{{ transporter_contract_address }}";
+const CONTRACT_ABI = JSON.parse(`{{ transporter_abi | safe }}`);
+let provider, signer, contract;
+const btnUpdate = document.getElementById('btnUpdate');
+const btnLink = document.getElementById('btnLink');
+const walletSpan = document.getElementById('walletAddr');
+const status = document.getElementById('status');
+const recordList = document.getElementById('recordList');
+
+async function connectAndLink() {
+  status.innerText = '';
+  if (!window.ethereum) {
+    status.innerText = 'MetaMask not detected. Please install MetaMask.';
+    alert('Install MetaMask');
+    return;
+  }
+  try {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    signer = provider.getSigner();
+    const addr = await signer.getAddress();
+    walletSpan.innerText = addr;
+    contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    btnUpdate.disabled = false;
+    status.innerText = 'Wallet linked successfully. Contract ready.';
+  } catch (err) {
+    status.innerText = 'Wallet linking error: ' + err.message;
+    btnUpdate.disabled = true;
+  }
+}
+async function updateTransportOnChain(e) {
+  e.preventDefault();
+  if (!signer || !contract) {
+    status.innerText = 'Wallet not connected.';
+    alert('Connect wallet first');
+    return;
+  }
+  const cropId = parseInt(document.getElementById('cropId').value);
+  const location = document.getElementById('location').value.trim();
+  const custody = document.getElementById('custody').value.trim();
+  if (!cropId || !location || !custody) return alert('Enter all values');
+  try {
+    status.innerText = 'Sending transaction... (confirm in MetaMask)';
+    const tx = await contract.updateTransport(cropId, location, custody);
+    status.innerText = 'Transaction sent. Waiting for confirmation...';
+    const receipt = await tx.wait();
+  status.innerText = 'Transaction mined: ' + receipt.transactionHash;
+  // Instead of reloading, fetch updated records
+  fetchRecords();
+  } catch (e) {
+    status.innerText = 'Transaction failed or rejected: ' + (e.message || e);
+    alert('Transaction failed or rejected: ' + (e.message || e));
+    console.error(e);
+  }
+}
+async function fetchRecords() {
+  const cropId = parseInt(document.getElementById('cropId').value);
+  if (!cropId) return;
+  try {
+    const records = await contract.getTransportRecords(cropId);
+    recordList.innerHTML = '';
+    if (records.length === 0) {
+      recordList.innerHTML = '<li class="py-2 text-gray-400">No records yet</li>';
+      return;
+    }
+    for (const r of records) {
+      const li = document.createElement('li');
+      li.className = 'py-2 flex flex-col animate__animated animate__fadeIn animate__faster';
+      li.innerHTML = `<span class="font-semibold text-gray-700">Location: ${r.location}</span>
+        <span class="text-xs text-gray-500">Custody: ${r.custody}</span>
+        <span class="text-xs text-gray-500">Transporter: ${r.transporter}</span>
+        <span class="text-xs text-gray-500">Time: ${new Date(r.timestamp * 1000).toLocaleString()}</span>`;
+      recordList.appendChild(li);
+    }
+  } catch (e) {
+    recordList.innerHTML = '<li class="py-2 text-red-400">Error fetching records</li>';
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  btnLink.addEventListener('click', connectAndLink);
+});
+document.getElementById('cropId').addEventListener('change', fetchRecords);
+btnUpdate.addEventListener('click', updateTransportOnChain);
+</script>
+{% endblock %}

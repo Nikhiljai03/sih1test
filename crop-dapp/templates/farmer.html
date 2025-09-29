@@ -33,7 +33,53 @@
         </div>
         <div>
           <label for="quality" class="block text-sm font-medium text-gray-700">Quality</label>
-          <input id="quality" class="input input-bordered w-full" placeholder="Quality" />
+          <select id="quality" class="input input-bordered w-full">
+            <option value="premium">Premium</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="fertilizer" class="block text-sm font-medium text-gray-700">Type of Fertilizers Used</label>
+          <select id="fertilizer" class="input input-bordered w-full">
+            <option value="urea">Urea</option>
+            <option value="compost">Compost</option>
+            <option value="vermicompost">Vermicompost</option>
+            <option value="biofertilizer">Biofertilizer</option>
+            <option value="npk">NPK</option>
+            <option value="dap">DAP</option>
+          </select>
+        </div>
+        <div>
+          <label for="organic" class="block text-sm font-medium text-gray-700">Organic/Inorganic</label>
+          <select id="organic" class="input input-bordered w-full">
+            <option value="organic">Organic</option>
+            <option value="inorganic">Inorganic</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="soil" class="block text-sm font-medium text-gray-700">Soil Type</label>
+          <select id="soil" class="input input-bordered w-full">
+            <option value="loamy">Loamy</option>
+            <option value="sandy">Sandy</option>
+            <option value="sandy loam">Sandy Loam</option>
+            <option value="clay">Clay</option>
+            <option value="silt">Silt</option>
+          </select>
+        </div>
+        <div>
+          <label for="irrigation" class="block text-sm font-medium text-gray-700">Irrigation Method</label>
+          <select id="irrigation" class="input input-bordered w-full">
+            <option value="drip">Drip</option>
+            <option value="sprinkler">Sprinkler</option>
+            <option value="flood">Flood</option>
+            <option value="manual">Manual</option>
+          </select>
         </div>
       </div>
       <button id="btnAdd" disabled class="btn btn-success w-full mt-4 animate__animated animate__pulse animate__infinite">Add Crop on-chain</button>
@@ -123,8 +169,12 @@ async function addCropOnChain() {
   const details = document.getElementById('desc').value.trim();
   const quantity = parseInt(document.getElementById('quantity').value || '0');
   const quality = document.getElementById('quality').value.trim();
+  const fertilizer = document.getElementById('fertilizer').value.trim();
+  const organic = document.getElementById('organic').value;
+  const soil = document.getElementById('soil').value.trim();
+  const irrigation = document.getElementById('irrigation').value.trim();
   const price = 0;
-  if (!name || quantity < 0) {
+  if (!name || quantity < 0 || !fertilizer || !organic || !soil || !irrigation) {
     status.innerText = 'Enter all values.';
     alert('Enter all values');
     return;
@@ -132,7 +182,7 @@ async function addCropOnChain() {
   try {
     status.innerText = 'Sending transaction... (confirm in MetaMask)';
     const tx = await contract.addCrop(
-      name, details, price, quantity, quality
+      name, details, price, quantity, quality, fertilizer, organic, soil, irrigation
     );
     status.innerText = 'Transaction sent. Waiting for confirmation...';
     const receipt = await tx.wait();
@@ -142,7 +192,16 @@ async function addCropOnChain() {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        name, description: details, quantity, quality, price, txHash: receipt.transactionHash
+        name,
+        description: details,
+        quantity,
+        quality,
+        fertilizer,
+        organic,
+        soil,
+        irrigation,
+        price,
+        txHash: receipt.transactionHash
       })
     });
     let jj;
@@ -167,6 +226,9 @@ async function addCropOnChain() {
 }
 
 btnLink.addEventListener('click', connectAndLink);
-btnAdd.addEventListener('click', addCropOnChain);
+btnAdd.addEventListener('click', function(e) {
+  e.preventDefault();
+  addCropOnChain();
+});
 </script>
 {% endblock %}

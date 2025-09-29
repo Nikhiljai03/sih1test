@@ -48,6 +48,30 @@
 				"internalType": "string",
 				"name": "quality",
 				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "fertilizer",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "organic",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "soil",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
+				"name": "irrigation",
+				"type": "string"
 			}
 		],
 		"name": "CropAdded",
@@ -78,6 +102,26 @@
 			{
 				"internalType": "string",
 				"name": "quality",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "fertilizer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "organic",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "soil",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "irrigation",
 				"type": "string"
 			}
 		],
@@ -143,6 +187,26 @@
 				"internalType": "string",
 				"name": "quality",
 				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "fertilizer",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "organic",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "soil",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "irrigation",
+				"type": "string"
 			}
 		],
 		"stateMutability": "view",
@@ -187,6 +251,26 @@
 					{
 						"internalType": "string",
 						"name": "quality",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "fertilizer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "organic",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "soil",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "irrigation",
 						"type": "string"
 					}
 				],
@@ -243,6 +327,26 @@
 					{
 						"internalType": "string",
 						"name": "quality",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "fertilizer",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "organic",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "soil",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "irrigation",
 						"type": "string"
 					}
 				],

@@ -22,7 +22,42 @@ class Product(db.Model):
     description = db.Column(db.Text)
     quantity = db.Column(db.Integer)
     quality = db.Column(db.String(80))
+    fertilizer = db.Column(db.String(120))
+    organic = db.Column(db.String(20))
+    soil = db.Column(db.String(80))
+    irrigation = db.Column(db.String(80))
     farmer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     tx_hash = db.Column(db.String(200), nullable=True)  # blockchain tx hash
+    assigned_transporter_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
-    farmer = db.relationship("User", backref="products")
+    assigned_transporter = db.relationship("User", foreign_keys=[assigned_transporter_id])
+    farmer = db.relationship("User", backref="products", foreign_keys=[farmer_id])
+
+
+class QualityInspection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    inspector_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    grade = db.Column(db.String(20))
+    certificate = db.Column(db.String(120))
+    ml_score = db.Column(db.Float)
+    comments = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+
+    product = db.relationship('Product', backref='inspections')
+    inspector = db.relationship('User', backref='inspections')
+
+# Retailer sale model
+class RetailSale(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    retailer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sale_price = db.Column(db.Float, nullable=False)
+    retail_details = db.Column(db.Text)
+    qr_data = db.Column(db.Text)
+    qr_img = db.Column(db.Text)  # base64 PNG
+    tx_hash = db.Column(db.String(200), nullable=True)  # blockchain tx hash
+    timestamp = db.Column(db.DateTime, server_default=db.func.now())
+
+    product = db.relationship('Product', backref='retail_sales')
+    retailer = db.relationship('User', backref='retail_sales')
