@@ -18,6 +18,17 @@
       <button id="btnLink" class="ml-2 px-3 py-1 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-all duration-200 animate__animated animate__fadeIn">Connect & Link Wallet</button>
     </div>
     <form class="space-y-4">
+      <div class="mb-2">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Select Crop</label>
+        <button type="button" onclick="toggleCropGrid()" class="px-3 py-1 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 transition mb-2">Select Crop</button>
+        <div id="cropGrid" class="grid grid-cols-4 gap-3 mb-2" style="display:none;">
+          <img src="/static/crops/potato.png" alt="Potato" class="cursor-pointer rounded-lg border-2 border-transparent hover:border-green-400" onclick="selectCrop('Potato')">
+          <img src="/static/crops/tomato.png" alt="Tomato" class="cursor-pointer rounded-lg border-2 border-transparent hover:border-green-400" onclick="selectCrop('Tomato')">
+          <img src="/static/crops/apple.png" alt="Apple" class="cursor-pointer rounded-lg border-2 border-transparent hover:border-green-400" onclick="selectCrop('Apple')">
+          <img src="/static/crops/carrot.png" alt="Carrot" class="cursor-pointer rounded-lg border-2 border-transparent hover:border-green-400" onclick="selectCrop('Carrot')">
+          <!-- Add more crops as needed -->
+        </div>
+      </div>
       <div>
         <label for="name" class="block text-sm font-medium text-gray-700">Crop Name</label>
         <input id="name" class="input input-bordered w-full" placeholder="Crop name" />
@@ -103,6 +114,14 @@
 </div>
 
 <script>
+function toggleCropGrid() {
+  const grid = document.getElementById('cropGrid');
+  grid.style.display = (grid.style.display === 'none') ? 'grid' : 'none';
+}
+function selectCrop(name) {
+  document.getElementById('name').value = name;
+  document.getElementById('cropGrid').style.display = 'none';
+}
 const CONTRACT_ADDRESS = "{{ contract_address }}";
 const CONTRACT_ABI = JSON.parse(`{{ abi | safe }}`);
 
